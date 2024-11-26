@@ -2,7 +2,7 @@ import { Controller, Post, HttpCode, Body } from '@nestjs/common';
 import { FormDataRequest } from 'nestjs-form-data';
 import { UploadDocumentCommand, YoutubeUrlsCommand } from './use-cases';
 import { CommandBus } from '@nestjs/cqrs';
-import { SpotifyUrlsDto, UploadDocumentDto, YoutubeUrlsDto } from './dtos';
+import { UploadDocumentDto, YoutubeUrlsDto } from './dtos';
 
 @Controller('uploader')
 export class UploaderController {

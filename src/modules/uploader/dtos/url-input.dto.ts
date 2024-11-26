@@ -7,5 +7,3 @@ export class UrlInputDto {
 }
 
 export class YoutubeUrlsDto extends UrlInputDto {}
-
-export class SpotifyUrlsDto extends UrlInputDto {}

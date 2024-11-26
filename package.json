@@ -40,11 +40,13 @@
     "i": "^0.3.7",
     "nestjs-form-data": "^1.9.92",
     "npm": "^10.9.1",
+    "openai": "^4.73.1",
     "pdf-parse": "^1.1.1",
     "pg": "^8.13.1",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1",
     "typeorm": "^0.3.20",
+    "weaviate-client": "^3.2.4",
     "youtube-dl-exec": "^3.0.10",
     "youtube-transcript": "^1.2.1",
     "ytdl-core": "^4.11.5"
