@@ -10,6 +10,6 @@ const Handlers = [GenerateYoutubeSummaryCommandHandler];
   imports: [CqrsModule],
   controllers: [LlmTaskController],
   providers: [OpenAIService, ...Handlers],
-  exports: [],
+  exports: [OpenAIService],
 })
 export class LlmTaskModule {}

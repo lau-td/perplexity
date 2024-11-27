@@ -13,6 +13,9 @@ export class Youtube extends BaseEntity {
   @Column({ type: 'varchar', length: 255 })
   url: string;
 
+  @Column({ type: 'text', nullable: true })
+  summary: string;
+
   @Column({ type: 'jsonb' })
   metadata: any;
 }

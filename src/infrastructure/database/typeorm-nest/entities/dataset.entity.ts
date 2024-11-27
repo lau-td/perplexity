@@ -8,6 +8,9 @@ export class Dataset extends BaseEntity {
   @Column({ type: 'varchar', length: 255 })
   name: string;
 
+  @Column({ type: 'text' })
+  description: string;
+
   @Column({ type: 'uuid' })
   userId: string;
 

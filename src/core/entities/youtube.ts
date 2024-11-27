@@ -5,6 +5,8 @@ export class YoutubeEntity extends BaseEntity {
 
   url: string;
 
+  summary: string;
+
   videoId: string;
 
   metadata: any;

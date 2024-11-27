@@ -1,15 +1,17 @@
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
 
 import { BaseEntity } from './base.entity';
+import { DocumentSegment } from './document-segment.entity';
 
 @Entity()
 export class Embedding extends BaseEntity {
-  @Column({ type: 'double precision', nullable: true })
+  @Column({ type: 'double precision', array: true, nullable: true })
   embedding: number[];
 
-  @Column({ type: 'jsonb', nullable: true })
-  metadata: Record<string, any>;
+  @Column({ type: 'uuid' })
+  documentSegmentId: string;
 
-  @Column({ nullable: true })
-  content: string;
+  @OneToOne(() => DocumentSegment)
+  @JoinColumn({ name: 'document_segment_id' })
+  documentSegment: DocumentSegment;
 }
