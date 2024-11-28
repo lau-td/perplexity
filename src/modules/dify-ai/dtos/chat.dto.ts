@@ -9,3 +9,7 @@ export class ChatInputDto {
   @IsString()
   documentId: string;
 }
+
+export class ChatResponseDto {
+  message: string;
+}

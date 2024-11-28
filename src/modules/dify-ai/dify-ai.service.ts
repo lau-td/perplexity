@@ -18,6 +18,7 @@ import {
   GetMessagesDto,
   GetMessagesQueryDto,
   GetMessagesResponseDto,
+  ChatResponseDto,
 } from './dtos';
 import { fetchDto } from 'src/common/libs/http';
 import { DifyAiConfig } from 'src/config';
@@ -75,7 +76,7 @@ export class DifyAiService {
     };
   }
 
-  async chat(input: ChatInputDto): Promise<any> {
+  async chat(input: ChatInputDto): Promise<ChatResponseDto> {
     try {
       const document = await this.documentRepository.findOne({
         id: input.documentId,
@@ -134,7 +135,9 @@ export class DifyAiService {
 
       const responseData = response.data.answer;
 
-      return responseData;
+      return {
+        message: responseData,
+      };
     } catch (error) {
       if (error instanceof HttpException) {
         throw error;
