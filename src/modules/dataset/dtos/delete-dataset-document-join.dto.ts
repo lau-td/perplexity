@@ -1,6 +1,6 @@
 import { IsNotEmpty, IsUUID } from 'class-validator';
 
-export class DeleteDatasetDocumentJoinBodyDto {
+export class DeleteDatasetDocumentJoinInputDto {
   @IsNotEmpty()
   @IsUUID()
   datasetId: string;
@@ -8,8 +8,6 @@ export class DeleteDatasetDocumentJoinBodyDto {
   @IsNotEmpty()
   @IsUUID()
   documentId: string;
-}
 
-export class DeleteDatasetDocumentJoinInputDto extends DeleteDatasetDocumentJoinBodyDto {
   userId: string;
 }

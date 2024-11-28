@@ -18,11 +18,14 @@ import {
   DeleteDatasetCommand,
   GetDatasetQuery,
   GetDatasetsQuery,
+  CreateDatasetDocumentJoinCommand,
+  DeleteDatasetDocumentJoinCommand,
 } from './use-cases';
 import {
   CreateDatasetBodyDto,
+  CreateDatasetDocumentJoinBodyDto,
+  CreateDatasetDocumentJoinResponseDto,
   CreateDatasetResponseDto,
-  DeleteDatasetBodyDto,
   UpdateDatasetBodyDto,
   UpdateDatasetResponseDto,
 } from './dtos';
@@ -76,11 +79,41 @@ export class DatasetController {
     );
   }
 
-  @Delete()
-  remove(@CurrentUser() user: AuthPayload, @Body() body: DeleteDatasetBodyDto) {
+  @Delete(':id')
+  remove(@CurrentUser() user: AuthPayload, @Param('id') id: string) {
     return this.commandBus.execute(
       new DeleteDatasetCommand({
-        ...body,
+        datasetId: id,
+        userId: user.userId,
+      }),
+    );
+  }
+
+  @Post(':id/document')
+  createDocumentJoin(
+    @CurrentUser() user: AuthPayload,
+    @Param('id') id: string,
+    @Body() body: CreateDatasetDocumentJoinBodyDto,
+  ): Promise<CreateDatasetDocumentJoinResponseDto> {
+    return this.commandBus.execute(
+      new CreateDatasetDocumentJoinCommand({
+        datasetId: id,
+        documentId: body.documentId,
+        userId: user.userId,
+      }),
+    );
+  }
+
+  @Delete(':datasetId/document/:documentId')
+  removeDocumentJoin(
+    @CurrentUser() user: AuthPayload,
+    @Param('datasetId') datasetId: string,
+    @Param('documentId') documentId: string,
+  ) {
+    return this.commandBus.execute(
+      new DeleteDatasetDocumentJoinCommand({
+        datasetId,
+        documentId,
         userId: user.userId,
       }),
     );

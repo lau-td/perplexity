@@ -7,6 +7,8 @@ import {
   DeleteDatasetCommandHandler,
   GetDatasetQueryHandler,
   GetDatasetsQueryHandler,
+  CreateDatasetDocumentJoinCommandHandler,
+  DeleteDatasetDocumentJoinCommandHandler,
 } from './use-cases';
 
 const Handlers = [
@@ -15,6 +17,8 @@ const Handlers = [
   DeleteDatasetCommandHandler,
   GetDatasetQueryHandler,
   GetDatasetsQueryHandler,
+  CreateDatasetDocumentJoinCommandHandler,
+  DeleteDatasetDocumentJoinCommandHandler,
 ];
 
 @Module({

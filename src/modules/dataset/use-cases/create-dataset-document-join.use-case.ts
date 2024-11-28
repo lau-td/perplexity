@@ -4,6 +4,8 @@ import { REPOSITORY_INJECTION_TOKEN } from 'src/common/enums';
 import {
   IDatasetDocumentJoinRepository,
   IDatasetRepository,
+  IDocumentRepository,
+  IYoutubeRepository,
 } from 'src/core/repository';
 import {
   CreateDatasetDocumentJoinInputDto,
@@ -27,9 +29,15 @@ export class CreateDatasetDocumentJoinCommandHandler
     private readonly datasetDocumentJoinRepository: IDatasetDocumentJoinRepository,
     @Inject(REPOSITORY_INJECTION_TOKEN.DATASET_REPOSITORY)
     private readonly datasetRepository: IDatasetRepository,
+    @Inject(REPOSITORY_INJECTION_TOKEN.DOCUMENT_REPOSITORY)
+    private readonly documentRepository: IDocumentRepository,
+    @Inject(REPOSITORY_INJECTION_TOKEN.YOUTUBE_REPOSITORY)
+    private readonly youtubeRepository: IYoutubeRepository,
   ) {}
 
-  async execute(command: CreateDatasetDocumentJoinCommand) {
+  async execute(
+    command: CreateDatasetDocumentJoinCommand,
+  ): Promise<CreateDatasetDocumentJoinResponseDto> {
     const { input } = command;
 
     const dataset = await this.datasetRepository.findOne({
@@ -42,14 +50,39 @@ export class CreateDatasetDocumentJoinCommandHandler
       );
     }
 
-    const join = await this.datasetDocumentJoinRepository.create({
+    await this.datasetDocumentJoinRepository.create({
       datasetId: input.datasetId,
       documentId: input.documentId,
     });
 
+    const datasetDocuments = await this.datasetDocumentJoinRepository.find({
+      datasetId: input.datasetId,
+    });
+
+    const documents = await Promise.all(
+      datasetDocuments.map(async (join) => {
+        const document = await this.documentRepository.findOne({
+          id: join.documentId,
+        });
+        const youtube = await this.youtubeRepository.findOne({
+          id: document.youtubeId,
+        });
+        return {
+          id: document.id,
+          youtube: {
+            name: youtube.name,
+            videoId: youtube.videoId,
+            url: youtube.url,
+          },
+        };
+      }),
+    );
+
     return {
-      datasetId: join.datasetId,
-      documentId: join.documentId,
+      id: dataset.id,
+      name: dataset.name,
+      description: dataset.description,
+      documents,
     };
   }
 }

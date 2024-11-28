@@ -1,11 +1,9 @@
 import { IsNotEmpty, IsUUID } from 'class-validator';
 
-export class DeleteDatasetBodyDto {
+export class DeleteDatasetInputDto {
   @IsNotEmpty()
   @IsUUID()
   datasetId: string;
-}
 
-export class DeleteDatasetInputDto extends DeleteDatasetBodyDto {
   userId: string;
 }
