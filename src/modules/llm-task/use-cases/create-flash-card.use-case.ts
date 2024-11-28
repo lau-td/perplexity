@@ -24,9 +24,11 @@ Here are the steps to follow:
 
 3. The answer should be concise, clear, and directly related to the question. It should provide a complete and accurate response to the question.
 
-4. Ensure that the flashcards cover a wide range of topics or points discussed in the video. Do not focus only on one aspect or section of the video.
+4. You must provide the explanation for the answer. The explaination is more detail and cover all the points in the question.
 
-5. The flashcards should be useful for someone who wants to review or learn about the topic discussed in the video. They should be able to understand the main points or ideas by going through the flashcards.
+5. Ensure that the flashcards cover a wide range of topics or points discussed in the video. Do not focus only on one aspect or section of the video.
+
+6. The flashcards should be useful for someone who wants to review or learn about the topic discussed in the video. They should be able to understand the main points or ideas by going through the flashcards.
 
 Remember, the goal is to create flashcards that can help someone understand and remember the key points or ideas discussed in the video.
 
@@ -34,12 +36,14 @@ Remember, the goal is to create flashcards that can help someone understand and 
 [
   {
     question: "question 1",
-    answer: "answer 1"
+    answer: "answer 1",
+    explanation: "explanation 1"
   },
   {
     question: "question 2",
-    answer: "answer 2"
-  }
+    answer: "answer 2",
+    explanation: "explanation 2",
+  },
 ]
 Base on the above template and instruction, here is the transcript of the YouTube video:
 
@@ -83,7 +87,8 @@ export class CreateFlashCardCommandHandler
         throw new NotFoundException('Youtube info not found');
       }
 
-      const prompt = PROMPT_TEMPLATE + youtubeInfo.metadata.transcript;
+      const prompt =
+        PROMPT_TEMPLATE + JSON.stringify(youtubeInfo.metadata.transcript);
       const flashCards = await this.openaiService.generateCompletion(prompt);
       const flashCardsJson = this.extractJsonContent(flashCards);
 
@@ -96,6 +101,7 @@ export class CreateFlashCardCommandHandler
           this.flashCardRepository.create({
             question: card.question,
             answer: card.answer,
+            explanation: card.explanation,
             documentId: input.documentId,
           }),
         ),
@@ -106,6 +112,7 @@ export class CreateFlashCardCommandHandler
           id: card.id,
           question: card.question,
           answer: card.answer,
+          explanation: card.explanation,
         })),
       };
     } catch (error) {

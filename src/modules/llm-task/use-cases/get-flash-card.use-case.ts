@@ -34,6 +34,7 @@ export class GetFlashCardCommandHandler
         flashCards: flashCards.map((flashCard) => ({
           question: flashCard.question,
           answer: flashCard.answer,
+          explanation: flashCard.explanation,
         })),
       };
     } catch (error) {
