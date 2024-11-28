@@ -9,10 +9,14 @@ import {
   Youtube,
   FlashCard,
   User,
+  Dataset,
+  DatasetDocumentJoin,
 } from './entities';
 import { REPOSITORY_INJECTION_TOKEN } from 'src/common/enums';
 
 import {
+  DatasetDocumentJoinRepository,
+  DatasetRepository,
   DocumentRepository,
   DocumentSegmentRepository,
   EmbeddingRepository,
@@ -46,6 +50,14 @@ const Adapters = [
     provide: REPOSITORY_INJECTION_TOKEN.USER_REPOSITORY,
     useClass: UserRepository,
   },
+  {
+    provide: REPOSITORY_INJECTION_TOKEN.DATASET_REPOSITORY,
+    useClass: DatasetRepository,
+  },
+  {
+    provide: REPOSITORY_INJECTION_TOKEN.DATASET_DOCUMENT_JOIN_REPOSITORY,
+    useClass: DatasetDocumentJoinRepository,
+  },
 ];
 
 @Global()
@@ -63,6 +75,8 @@ const Adapters = [
       Embedding,
       FlashCard,
       User,
+      Dataset,
+      DatasetDocumentJoin,
     ]),
   ],
   providers: [...Adapters],

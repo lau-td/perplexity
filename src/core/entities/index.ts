@@ -6,3 +6,4 @@ export * from './document';
 export * from './document-segment';
 export * from './dataset';
 export * from './flash-card';
+export * from './dataset-document-join';

@@ -17,5 +17,9 @@ export interface IGenericRepository<DomainEntity> {
 
   delete(id: string): Promise<void>;
 
+  deleteByCondition(
+    condition: Partial<{ [K in keyof DomainEntity]: DomainEntity[K] }>,
+  ): Promise<void>;
+
   softDelete(id: string): Promise<void>;
 }
