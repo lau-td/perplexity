@@ -5,6 +5,7 @@ import { HttpModule } from '@nestjs/axios';
 import { ConfigType } from '@nestjs/config';
 import { DifyAiConfig } from 'src/config';
 import { ConfigModule } from '@nestjs/config';
+import { VectorStoreModule } from '../vector-store/vector-store.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { ConfigModule } from '@nestjs/config';
       }),
       inject: [DifyAiConfig.KEY],
     }),
+    VectorStoreModule,
   ],
   controllers: [DifyAiController],
   providers: [DifyAiService],

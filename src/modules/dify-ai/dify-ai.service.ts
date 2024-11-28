@@ -20,16 +20,19 @@ import {
   GetMessagesResponseDto,
   ChatResponseDto,
 } from './dtos';
-import { fetchDto } from 'src/common/libs/http';
+import { fetchDto, fetchStreamDto } from 'src/common/libs/http';
 import { DifyAiConfig } from 'src/config';
 import { ConfigType } from '@nestjs/config';
 import { IDocumentRepository, IUserRepository } from 'src/core/repository';
 import { REPOSITORY_INJECTION_TOKEN } from 'src/common/enums';
+import { VectorStoreService } from '../vector-store/vector-store.service';
+import { Readable } from 'stream';
 
 @Injectable()
 export class DifyAiService {
   constructor(
     private readonly httpService: HttpService,
+    private readonly vectorStoreService: VectorStoreService,
 
     @Inject(DifyAiConfig.KEY)
     private readonly config: ConfigType<typeof DifyAiConfig>,
@@ -62,21 +65,50 @@ export class DifyAiService {
   }
 
   private createChatPayload(
+    responseMode: 'blocking' | 'streaming',
     query: string,
+    context: string,
     conversation_id: string,
     parent_message_id: string,
   ): ChatDifyBodyDto {
     return {
-      response_mode: 'blocking',
-      conversation_id: conversation_id,
+      response_mode: responseMode,
+      conversation_id: conversation_id !== '' ? conversation_id : null,
       files: [],
       query: query,
-      inputs: null,
-      parent_message_id: parent_message_id,
+      inputs: {
+        context: context,
+      },
+      parent_message_id: parent_message_id !== '' ? parent_message_id : null,
     };
   }
 
-  async chat(input: ChatInputDto): Promise<ChatResponseDto> {
+  async getContext(
+    userId: string,
+    documentIds: string[],
+    query: string,
+  ): Promise<string> {
+    try {
+      const searchResults = await this.vectorStoreService.searchByQuery(
+        userId,
+        query,
+        documentIds,
+      );
+      const context = searchResults.map((result) => result.text).join('\n\n');
+
+      return context;
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException(
+        'Failed to get context',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async chatMessageBlock(input: ChatInputDto): Promise<ChatResponseDto> {
     try {
       const document = await this.documentRepository.findOne({
         id: input.documentId,
@@ -103,8 +135,16 @@ export class DifyAiService {
         },
       });
 
-      const payload = this.createChatPayload(
+      const context = await this.getContext(
+        document.userId,
+        [document.id],
         input.query,
+      );
+
+      const payload = this.createChatPayload(
+        'blocking',
+        input.query,
+        context,
         document.conversationId,
         document.parentMessageId,
       );
@@ -123,21 +163,84 @@ export class DifyAiService {
         );
       }
 
-      if (!document.conversationId) {
-        await this.documentRepository.update(document.id, {
-          conversationId: response.data.conversation_id,
-        });
-      }
-
-      await this.documentRepository.update(document.id, {
-        parentMessageId: response.data.message_id,
-      });
+      this.updateDocumentWithMessageInfo(
+        document.id,
+        response.data.conversation_id,
+        response.data.message_id,
+      );
 
       const responseData = response.data.answer;
 
       return {
-        message: responseData,
+        answer: responseData,
       };
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException(
+        'Failed to chat',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async chatMessageStream(input: ChatInputDto): Promise<Readable> {
+    try {
+      const document = await this.documentRepository.findOne({
+        id: input.documentId,
+      });
+
+      if (!document) {
+        throw new NotFoundException('Document not found');
+      }
+
+      const user = await this.userRepository.findOne({
+        id: document.userId,
+      });
+
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      const token = await this.getPassport({
+        body: {
+          email: user.email,
+        },
+        headers: {
+          'x-app-code': this.config.appCode,
+        },
+      });
+
+      const context = await this.getContext(
+        document.userId,
+        [document.id],
+        input.query,
+      );
+
+      const payload = this.createChatPayload(
+        'streaming',
+        input.query,
+        context,
+        document.conversationId,
+        document.parentMessageId,
+      );
+      const dto = new ChatDifyDto(payload);
+      const response = await fetchStreamDto({
+        httpService: this.httpService,
+        headers: new AxiosHeaders({
+          Authorization: `Bearer ${token}`,
+        }),
+        dto,
+      });
+      if (!response.status) {
+        throw new HttpException(
+          response.message,
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+
+      return response.data;
     } catch (error) {
       if (error instanceof HttpException) {
         throw error;
@@ -206,5 +309,29 @@ export class DifyAiService {
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
+  }
+
+  async updateDocumentWithMessageInfo(
+    documentId: string,
+    conversationId: string,
+    messageId: string,
+  ): Promise<void> {
+    const document = await this.documentRepository.findOne({
+      id: documentId,
+    });
+
+    if (!document) {
+      throw new NotFoundException('Document not found');
+    }
+
+    if (!document.conversationId) {
+      await this.documentRepository.update(document.id, {
+        conversationId: conversationId,
+      });
+    }
+
+    await this.documentRepository.update(document.id, {
+      parentMessageId: messageId,
+    });
   }
 }

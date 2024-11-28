@@ -11,5 +11,5 @@ export class ChatInputDto {
 }
 
 export class ChatResponseDto {
-  message: string;
+  answer: string;
 }

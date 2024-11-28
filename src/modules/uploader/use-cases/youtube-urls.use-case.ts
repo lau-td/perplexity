@@ -95,7 +95,10 @@ base on above instructions, write a summary for the following transcript and you
 `;
 
 export class YoutubeUrlsCommand implements ICommand {
-  constructor(public readonly urls: string[]) {}
+  constructor(
+    public readonly urls: string[],
+    public readonly userId: string,
+  ) {}
 }
 
 @CommandHandler(YoutubeUrlsCommand)
@@ -181,6 +184,7 @@ export class YoutubeUrlsCommandHandler
       // Save the document to the database
       const document = await this.documentRepository.create({
         youtubeId: youtube.id,
+        userId: command.userId,
       });
 
       // Save the chunks to the database
