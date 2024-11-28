@@ -5,4 +5,10 @@ export class DocumentEntity extends BaseEntity {
   youtubeId: string;
 
   youtube: YoutubeEntity;
+
+  userId: string;
+
+  conversationId: string;
+
+  parentMessageId: string;
 }

@@ -2,13 +2,22 @@ import { Global, Module } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TypeOrmNestDatabaseConfig } from 'src/config';
-import { DocumentSegment, Embedding, Document, Youtube } from './entities';
+import {
+  DocumentSegment,
+  Embedding,
+  Document,
+  Youtube,
+  FlashCard,
+  User,
+} from './entities';
 import { REPOSITORY_INJECTION_TOKEN } from 'src/common/enums';
 
 import {
   DocumentRepository,
   DocumentSegmentRepository,
   EmbeddingRepository,
+  FlashCardRepository,
+  UserRepository,
   YoutubeRepository,
 } from './repository';
 
@@ -26,8 +35,16 @@ const Adapters = [
     useClass: DocumentSegmentRepository,
   },
   {
+    provide: REPOSITORY_INJECTION_TOKEN.FLASH_CARD_REPOSITORY,
+    useClass: FlashCardRepository,
+  },
+  {
     provide: REPOSITORY_INJECTION_TOKEN.DOCUMENT_REPOSITORY,
     useClass: DocumentRepository,
+  },
+  {
+    provide: REPOSITORY_INJECTION_TOKEN.USER_REPOSITORY,
+    useClass: UserRepository,
   },
 ];
 
@@ -40,6 +57,10 @@ const Adapters = [
         config,
     }),
     TypeOrmModule.forFeature([Youtube, Document, DocumentSegment, Embedding]),
+    TypeOrmModule.forFeature([Youtube]),
+    TypeOrmModule.forFeature([FlashCard]),
+    TypeOrmModule.forFeature([Document]),
+    TypeOrmModule.forFeature([User]),
   ],
   providers: [...Adapters],
   exports: [...Adapters, TypeOrmModule],

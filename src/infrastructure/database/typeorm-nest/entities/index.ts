@@ -6,3 +6,4 @@ export * from './embedding.entity';
 export * from './document.entity';
 export * from './document-segment.entity';
 export * from './dataset-document-join.entity';
+export * from './flash-card.entity';
