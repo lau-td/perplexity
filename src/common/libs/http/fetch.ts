@@ -8,6 +8,7 @@ import { AxiosRequestHeaders } from 'axios';
 import { lastValueFrom } from 'rxjs';
 import { HttpStatus } from '@nestjs/common';
 import { HttpFetchDto } from './http-fetch.dto';
+import { Readable } from 'stream';
 
 export interface IFetchDtoResponse<T> {
   data: T;
@@ -75,6 +76,62 @@ export async function fetchDto<T>(data: {
         JSON.stringify(error?.response?.data) ??
         (error || 'Internal server error'),
     } as IFetchDtoResponse<T>;
+
+    let newStatusCode = HttpStatus.INTERNAL_SERVER_ERROR;
+    if (error instanceof AxiosError) {
+      // The request was made and the server responded with a status code
+      // that falls out of the range of 2xx
+      newStatusCode =
+        error.response?.status ?? HttpStatus.INTERNAL_SERVER_ERROR;
+    } else if (error.request) {
+      // The request was made but no response was received
+      // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+      // http.ClientRequest in node.js
+      newStatusCode = HttpStatus.SERVICE_UNAVAILABLE;
+    }
+
+    return {
+      ...errorResponse,
+      statusCode: newStatusCode,
+    };
+  }
+}
+
+export async function fetchStreamDto(data: {
+  dto: HttpFetchDto;
+  httpService: HttpService;
+  headers?: AxiosRequestHeaders;
+}): Promise<IFetchDtoResponse<Readable>> {
+  const { dto, httpService, headers } = data;
+  const url = dto.interpolatedUrl;
+  const method = dto.method;
+  const responseMessage = 'success';
+
+  try {
+    const response = await httpService.axiosRef.request<Readable>({
+      url: encodeURI(url),
+      data: dto.bodyDto,
+      headers,
+      method,
+      responseType: 'stream',
+    });
+
+    return {
+      data: response.data,
+      statusCode: response.status,
+      status: true,
+      message: responseMessage,
+    };
+  } catch (error) {
+    const errorResponse = {
+      data: {} as Readable,
+      statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+      status: false,
+      message:
+        error.message ??
+        JSON.stringify(error?.response?.data) ??
+        (error || 'Internal server error'),
+    } as IFetchDtoResponse<Readable>;
 
     let newStatusCode = HttpStatus.INTERNAL_SERVER_ERROR;
     if (error instanceof AxiosError) {

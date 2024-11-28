@@ -100,6 +100,14 @@ export function GenericRepository<
       await this.repository.delete(condition);
     }
 
+    async deleteByCondition(
+      condition: Partial<{ [K in keyof DomainEntity]: DomainEntity[K] }>,
+    ): Promise<void> {
+      await this.repository.delete(
+        condition as unknown as FindOptionsWhere<OrmModel>,
+      );
+    }
+
     async softDelete(id: string): Promise<void> {
       const condition = { id } as unknown as FindOptionsWhere<OrmModel>;
       const ormModel = await this.repository.findOne({

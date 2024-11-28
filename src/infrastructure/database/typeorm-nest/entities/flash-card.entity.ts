@@ -11,6 +11,9 @@ export class FlashCard extends BaseEntity {
   @Column({ type: 'text' })
   answer: string;
 
+  @Column({ type: 'text' })
+  explanation: string;
+
   @Column({ type: 'uuid' })
   documentId: string;
 

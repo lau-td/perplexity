@@ -1,17 +1,25 @@
 import { Module } from '@nestjs/common';
-
-import { UploadDocumentCommandHandler } from './use-cases';
-import { UploaderController } from './uploader.controller';
 import { CqrsModule } from '@nestjs/cqrs';
 import { NestjsFormDataModule } from 'nestjs-form-data';
-import { YoutubeUrlsCommandHandler } from './use-cases';
 import { VectorStoreModule } from '../vector-store/vector-store.module';
 import { LlmTaskModule } from '../llm-task/llm-task.module';
+import { AuthModule } from '../auth/auth.module';
+import { UploaderController } from './uploader.controller';
+import {
+  UploadDocumentCommandHandler,
+  YoutubeUrlsCommandHandler,
+} from './use-cases';
 
 const Handlers = [UploadDocumentCommandHandler, YoutubeUrlsCommandHandler];
 
 @Module({
-  imports: [CqrsModule, NestjsFormDataModule, VectorStoreModule, LlmTaskModule],
+  imports: [
+    CqrsModule,
+    NestjsFormDataModule,
+    VectorStoreModule,
+    LlmTaskModule,
+    AuthModule,
+  ],
   controllers: [UploaderController],
   providers: [...Handlers],
   exports: [],

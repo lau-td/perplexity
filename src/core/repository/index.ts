@@ -5,3 +5,5 @@ export * from './document.repository.interface';
 export * from './document-segment.repository.interface';
 export * from './flash-card.repository.interface';
 export * from './user-repository.interface';
+export * from './dataset.repository.interface';
+export * from './dataset-document-join.repository.interface';
