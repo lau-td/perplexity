@@ -2,6 +2,8 @@ import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import { VectorStoreService } from './vector-store.service';
 import { ProcessStoreDocumentDto } from './dtos';
 import { SearchByQueryDto } from './dtos/search-by-query.dto';
+import { CurrentUser } from 'src/common/decorators/current-user.decorator';
+import { AuthPayload } from '../auth/interfaces';
 
 @Controller('vector-store')
 export class VectorStoreController {
@@ -9,9 +11,12 @@ export class VectorStoreController {
 
   @HttpCode(HttpStatus.OK)
   @Post('store-document')
-  async storeDocument(@Body() body: ProcessStoreDocumentDto) {
+  async storeDocument(
+    @CurrentUser() user: AuthPayload,
+    @Body() body: ProcessStoreDocumentDto,
+  ) {
     return this.vectorStoreService.processStoreDocument(
-      body.userId,
+      user.userId,
       body.documentId,
     );
   }
