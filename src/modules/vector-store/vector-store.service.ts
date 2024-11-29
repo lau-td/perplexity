@@ -82,6 +82,6 @@ export class VectorStoreService {
         : undefined;
 
     const embedding = await this.embeddingService.generateEmbedding(query);
-    return this.weaviateService.search(embedding, collectionName, 3, filter);
+    return this.weaviateService.search(embedding, collectionName, 10, filter);
   }
 }

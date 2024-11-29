@@ -7,3 +7,4 @@ export * from './flash-card.repository';
 export * from './user.repository';
 export * from './dataset.repository';
 export * from './dataset-document-join.repository';
+export * from './document-chapter.repository';

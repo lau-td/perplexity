@@ -23,7 +23,11 @@ import {
 import { fetchDto, fetchStreamDto } from 'src/common/libs/http';
 import { DifyAiConfig } from 'src/config';
 import { ConfigType } from '@nestjs/config';
-import { IDocumentRepository, IUserRepository } from 'src/core/repository';
+import {
+  IDocumentRepository,
+  IUserRepository,
+  IYoutubeRepository,
+} from 'src/core/repository';
 import { REPOSITORY_INJECTION_TOKEN } from 'src/common/enums';
 import { VectorStoreService } from '../vector-store/vector-store.service';
 import { Readable } from 'stream';
@@ -42,12 +46,20 @@ export class DifyAiService {
 
     @Inject(REPOSITORY_INJECTION_TOKEN.USER_REPOSITORY)
     private readonly userRepository: IUserRepository,
+
+    @Inject(REPOSITORY_INJECTION_TOKEN.YOUTUBE_REPOSITORY)
+    private readonly youtubeRepository: IYoutubeRepository,
   ) {}
 
   async getPassport(input: GetPassportDifyAiInputDto): Promise<string> {
     try {
       const xAppCode = this.config.appCode;
-      const dto = new GetPassportDto(input.body, input.headers);
+      const dto = new GetPassportDto(
+        {
+          ...input.body,
+        },
+        input.headers,
+      );
       const response = await fetchDto<GetPassportResponseDto>({
         dto,
         httpService: this.httpService,
@@ -212,6 +224,14 @@ export class DifyAiService {
         },
       });
 
+      const youtube = await this.youtubeRepository.findOne({
+        id: document.youtubeId,
+      });
+
+      if (!youtube) {
+        throw new NotFoundException('Youtube not found');
+      }
+
       const context = await this.getContext(
         document.userId,
         [document.id],
@@ -221,7 +241,12 @@ export class DifyAiService {
       const payload = this.createChatPayload(
         'streaming',
         input.query,
-        context,
+        context +
+          '---------------' +
+          JSON.stringify({
+            youtubeTitle: youtube.name,
+            youtubeSummary: youtube.summary,
+          }),
         document.conversationId,
         document.parentMessageId,
       );

@@ -1,7 +1,7 @@
 import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { REPOSITORY_INJECTION_TOKEN } from 'src/common/enums';
 import { IUserRepository } from 'src/core/repository';
-import { LoginDto, LoginResponseDto } from './dtos';
+import { LoginDto, LoginResponseDto, SignupDto } from './dtos';
 import { AuthPayload } from './interfaces';
 import { JwtService } from '@nestjs/jwt';
 
@@ -19,6 +19,29 @@ export class AuthService {
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
+
+    const payload: AuthPayload = {
+      userId: user.id,
+      email: user.email,
+    };
+
+    const token = await this.generateToken(payload);
+
+    return { accessToken: token };
+  }
+
+  async signup(dto: SignupDto): Promise<LoginResponseDto> {
+    const existingUser = await this.userRepository.findOne({
+      email: dto.email,
+    });
+    if (existingUser) {
+      throw new UnauthorizedException('User already exists');
+    }
+
+    const user = await this.userRepository.create({
+      email: dto.email,
+      password: 'password',
+    });
 
     const payload: AuthPayload = {
       userId: user.id,

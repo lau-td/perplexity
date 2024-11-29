@@ -6,9 +6,9 @@ import {
   CreateFlashCardCommand,
 } from './use-cases';
 import {
-  GenerateYoutubeSummaryInputDto,
-  CreateFlashCardInputDto,
-  GetFlashCardBodyDto,
+  GetFlashCardQueryDto,
+  CreateFlashCardBodyDto,
+  GenerateYoutubeSummaryBodyDto,
 } from './dtos';
 
 @Controller('llm-tasks')
@@ -16,17 +16,17 @@ export class LlmTaskController {
   constructor(private readonly commandBus: CommandBus) {}
 
   @Post('youtube-summary')
-  generateYoutubeSummary(@Body() body: GenerateYoutubeSummaryInputDto) {
+  generateYoutubeSummary(@Body() body: GenerateYoutubeSummaryBodyDto) {
     return this.commandBus.execute(new GenerateYoutubeSummaryCommand(body));
   }
 
   @Get('flash-card')
-  getFlashCard(@Query() query: GetFlashCardBodyDto) {
+  getFlashCard(@Query() query: GetFlashCardQueryDto) {
     return this.commandBus.execute(new GetFlashCardCommand(query));
   }
 
   @Post('flash-card')
-  createFlashCard(@Body() body: CreateFlashCardInputDto) {
+  createFlashCard(@Body() body: CreateFlashCardBodyDto) {
     return this.commandBus.execute(new CreateFlashCardCommand(body));
   }
 }

@@ -11,12 +11,14 @@ import {
   User,
   Dataset,
   DatasetDocumentJoin,
+  DocumentChapter,
 } from './entities';
 import { REPOSITORY_INJECTION_TOKEN } from 'src/common/enums';
 
 import {
   DatasetDocumentJoinRepository,
   DatasetRepository,
+  DocumentChapterRepository,
   DocumentRepository,
   DocumentSegmentRepository,
   EmbeddingRepository,
@@ -58,6 +60,10 @@ const Adapters = [
     provide: REPOSITORY_INJECTION_TOKEN.DATASET_DOCUMENT_JOIN_REPOSITORY,
     useClass: DatasetDocumentJoinRepository,
   },
+  {
+    provide: REPOSITORY_INJECTION_TOKEN.CHAPTER_REPOSITORY,
+    useClass: DocumentChapterRepository,
+  },
 ];
 
 @Global()
@@ -77,6 +83,7 @@ const Adapters = [
       User,
       Dataset,
       DatasetDocumentJoin,
+      DocumentChapter,
     ]),
   ],
   providers: [...Adapters],

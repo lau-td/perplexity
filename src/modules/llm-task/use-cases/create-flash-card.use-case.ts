@@ -1,12 +1,12 @@
 import { CommandHandler, ICommand, ICommandHandler } from '@nestjs/cqrs';
 import { REPOSITORY_INJECTION_TOKEN } from 'src/common/enums';
-import { Inject, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Inject, NotFoundException } from '@nestjs/common';
 import {
   IDocumentRepository,
   IFlashCardRepository,
   IYoutubeRepository,
 } from 'src/core/repository';
-import { CreateFlashCardInputDto, CreateFlashCardsResponseDto } from '../dtos';
+import { CreateFlashCardInputDto, CreateFlashCardResponseDto } from '../dtos';
 import { OpenAIService } from '../openai.service';
 
 export class CreateFlashCardCommand implements ICommand {
@@ -52,7 +52,7 @@ Base on the above template and instruction, here is the transcript of the YouTub
 @CommandHandler(CreateFlashCardCommand)
 export class CreateFlashCardCommandHandler
   implements
-    ICommandHandler<CreateFlashCardCommand, CreateFlashCardsResponseDto>
+    ICommandHandler<CreateFlashCardCommand, CreateFlashCardResponseDto[]>
 {
   constructor(
     @Inject(REPOSITORY_INJECTION_TOKEN.FLASH_CARD_REPOSITORY)
@@ -87,6 +87,14 @@ export class CreateFlashCardCommandHandler
         throw new NotFoundException('Youtube info not found');
       }
 
+      const flashCardCount = await this.flashCardRepository.count({
+        documentId: input.documentId,
+      });
+
+      if (flashCardCount > 0) {
+        throw new BadRequestException('Flash cards already exist');
+      }
+
       const prompt =
         PROMPT_TEMPLATE + JSON.stringify(youtubeInfo.metadata.transcript);
       const flashCards = await this.openaiService.generateCompletion(prompt);
@@ -107,14 +115,12 @@ export class CreateFlashCardCommandHandler
         ),
       );
 
-      return {
-        flashCards: createdFlashCards.map((card) => ({
-          id: card.id,
-          question: card.question,
-          answer: card.answer,
-          explanation: card.explanation,
-        })),
-      };
+      return createdFlashCards.map((card) => ({
+        id: card.id,
+        question: card.question,
+        answer: card.answer,
+        explanation: card.explanation,
+      }));
     } catch (error) {
       console.error('Error creating flash cards:', error);
       throw error;

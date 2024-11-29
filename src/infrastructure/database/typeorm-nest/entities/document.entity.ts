@@ -6,6 +6,9 @@ import { User } from './user.entity';
 
 @Entity()
 export class Document extends BaseEntity {
+  @Column({ type: 'varchar', nullable: true })
+  name: string;
+
   @Column({ type: 'uuid' })
   youtubeId: string;
 

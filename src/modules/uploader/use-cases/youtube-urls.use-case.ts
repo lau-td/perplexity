@@ -20,6 +20,7 @@ import { ChunkingService } from 'src/modules/vector-store/chunking.service';
 import { OpenAIService } from 'src/modules/llm-task/openai.service';
 
 import { EmbeddingService } from 'src/modules/vector-store/embedding.service';
+import { YoutubeUrlsInputDto, YoutubeUrlsResponseDto } from '../dtos';
 
 const PROMPT_TEMPLATE = `
 # Instructions for Summarizing a YouTube Video Transcript
@@ -95,15 +96,12 @@ base on above instructions, write a summary for the following transcript and you
 `;
 
 export class YoutubeUrlsCommand implements ICommand {
-  constructor(
-    public readonly urls: string[],
-    public readonly userId: string,
-  ) {}
+  constructor(public readonly input: YoutubeUrlsInputDto) {}
 }
 
 @CommandHandler(YoutubeUrlsCommand)
 export class YoutubeUrlsCommandHandler
-  implements ICommandHandler<YoutubeUrlsCommand, string>
+  implements ICommandHandler<YoutubeUrlsCommand, YoutubeUrlsResponseDto>
 {
   constructor(
     @Inject(REPOSITORY_INJECTION_TOKEN.YOUTUBE_REPOSITORY)
@@ -125,9 +123,9 @@ export class YoutubeUrlsCommandHandler
     private readonly embeddingService: EmbeddingService,
   ) {}
 
-  async execute(command: YoutubeUrlsCommand) {
+  async execute(command: YoutubeUrlsCommand): Promise<YoutubeUrlsResponseDto> {
     try {
-      const { urls } = command;
+      const { urls, userId } = command.input;
       const [transcript, info] = await Promise.all([
         getYoutubeTranscript(urls[0]),
         getYoutubeInfo(urls[0]),
@@ -138,7 +136,65 @@ export class YoutubeUrlsCommandHandler
       });
 
       if (existingYoutube) {
-        return existingYoutube.id;
+        const document = await this.documentRepository.findOne({
+          youtubeId: existingYoutube.id,
+          userId,
+        });
+
+        if (document) {
+          return {
+            documentId: document.id,
+            youtubeId: existingYoutube.id,
+          };
+        }
+
+        // If the document does not exist, create a new one
+
+        // Create new document with the user id
+        // Get current document with the youtube id
+        const currentDocument = await this.documentRepository.findOne({
+          youtubeId: existingYoutube.id,
+        });
+
+        const currentDocumentSegments =
+          await this.documentSegmentRepository.find({
+            documentId: currentDocument.id,
+          });
+
+        const currentEmbeddings = await Promise.all(
+          currentDocumentSegments.map((segment) =>
+            this.embeddingRepository.findOne({
+              documentSegmentId: segment.id,
+            }),
+          ),
+        );
+
+        const newDocument = await this.documentRepository.create({
+          name: info.title,
+          youtubeId: existingYoutube.id,
+          userId,
+        });
+
+        const newDocumentSegments =
+          await this.documentSegmentRepository.createMany(
+            currentDocumentSegments.map((segment) => ({
+              documentId: newDocument.id,
+              content: segment.content,
+              position: segment.position,
+            })),
+          );
+
+        await this.embeddingRepository.createMany(
+          newDocumentSegments.map((segment, index) => ({
+            documentSegmentId: segment.id,
+            embedding: currentEmbeddings[index].embedding,
+          })),
+        );
+
+        return {
+          documentId: newDocument.id,
+          youtubeId: existingYoutube.id,
+        };
       }
 
       const formattedTranscriptInJson = convertTranscriptToJson(transcript);
@@ -183,8 +239,9 @@ export class YoutubeUrlsCommandHandler
 
       // Save the document to the database
       const document = await this.documentRepository.create({
+        name: youtube.name,
         youtubeId: youtube.id,
-        userId: command.userId,
+        userId,
       });
 
       // Save the chunks to the database
@@ -217,7 +274,10 @@ export class YoutubeUrlsCommandHandler
         ),
       );
 
-      return youtube.id;
+      return {
+        documentId: document.id,
+        youtubeId: youtube.id,
+      };
     } catch (error) {
       console.error('Error processing YouTube URL:', error);
       throw error;

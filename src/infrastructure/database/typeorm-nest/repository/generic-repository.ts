@@ -65,6 +65,16 @@ export function GenericRepository<
       return this.toDomainEntity(savedOrmEntity);
     }
 
+    async createMany(
+      entities: Partial<DomainEntity>[],
+    ): Promise<DomainEntity[]> {
+      const ormModels = this.repository.create(
+        entities as unknown as DeepPartial<OrmModel>[],
+      );
+      const savedOrmEntities = await this.repository.save(ormModels);
+      return savedOrmEntities.map(this.toDomainEntity);
+    }
+
     async update(
       id: string,
       entity: Partial<DomainEntity>,

@@ -1,3 +1,4 @@
+import { Expose } from 'class-transformer';
 import { IsArray, IsString } from 'class-validator';
 
 export class UrlInputDto {
@@ -6,4 +7,14 @@ export class UrlInputDto {
   urls: string[];
 }
 
-export class YoutubeUrlsDto extends UrlInputDto {}
+export class YoutubeUrlsInputDto extends UrlInputDto {
+  userId: string;
+}
+
+export class YoutubeUrlsResponseDto {
+  @Expose()
+  documentId: string;
+
+  @Expose()
+  youtubeId: string;
+}

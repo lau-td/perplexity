@@ -2,7 +2,7 @@ import { Controller, Post, HttpCode, Body, UseGuards } from '@nestjs/common';
 import { FormDataRequest } from 'nestjs-form-data';
 import { UploadDocumentCommand, YoutubeUrlsCommand } from './use-cases';
 import { CommandBus } from '@nestjs/cqrs';
-import { UploadDocumentDto, YoutubeUrlsDto } from './dtos';
+import { UploadDocumentDto, YoutubeUrlsInputDto } from './dtos';
 import { CurrentUser } from 'src/common/decorators';
 import { AuthPayload } from './interfaces';
 import { JwtAuthGuard } from 'src/common/guards';
@@ -23,10 +23,10 @@ export class UploaderController {
   @Post('youtube')
   uploadYoutubeUrls(
     @CurrentUser() user: AuthPayload,
-    @Body() body: YoutubeUrlsDto,
+    @Body() body: YoutubeUrlsInputDto,
   ) {
     return this.commandBus.execute(
-      new YoutubeUrlsCommand(body.urls, user.userId),
+      new YoutubeUrlsCommand({ urls: body.urls, userId: user.userId }),
     );
   }
 }

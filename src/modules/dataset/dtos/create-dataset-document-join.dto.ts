@@ -23,8 +23,5 @@ export class CreateDatasetDocumentJoinDocumentDto {
 }
 
 export class CreateDatasetDocumentJoinResponseDto {
-  id: string;
-  name: string;
-  description: string;
-  documents: CreateDatasetDocumentJoinDocumentDto[];
+  result: string;
 }

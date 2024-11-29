@@ -90,18 +90,22 @@ export class DatasetController {
   }
 
   @Post(':id/document')
-  createDocumentJoin(
+  async createDocumentJoin(
     @CurrentUser() user: AuthPayload,
     @Param('id') id: string,
     @Body() body: CreateDatasetDocumentJoinBodyDto,
   ): Promise<CreateDatasetDocumentJoinResponseDto> {
-    return this.commandBus.execute(
+    await this.commandBus.execute(
       new CreateDatasetDocumentJoinCommand({
         datasetId: id,
         documentId: body.documentId,
         userId: user.userId,
       }),
     );
+
+    return {
+      result: 'success',
+    };
   }
 
   @Delete(':datasetId/document/:documentId')

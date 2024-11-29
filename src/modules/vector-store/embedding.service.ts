@@ -19,7 +19,7 @@ export class EmbeddingService {
   async generateEmbedding(text: string): Promise<number[]> {
     try {
       const response = await this.openai.embeddings.create({
-        model: 'text-embedding-ada-002',
+        model: 'text-embedding-3-large',
         input: text,
       });
 
@@ -37,7 +37,7 @@ export class EmbeddingService {
   async generateEmbeddings(texts: string[]): Promise<number[][]> {
     try {
       const response = await this.openai.embeddings.create({
-        model: 'text-embedding-ada-002',
+        model: 'text-embedding-3-large',
         input: texts,
       });
 

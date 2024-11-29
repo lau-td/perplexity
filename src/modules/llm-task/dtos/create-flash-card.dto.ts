@@ -13,7 +13,3 @@ export class CreateFlashCardResponseDto {
   question: string;
   answer: string;
 }
-
-export class CreateFlashCardsResponseDto {
-  flashCards: CreateFlashCardResponseDto[];
-}
