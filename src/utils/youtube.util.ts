@@ -1,9 +1,96 @@
 import { TranscriptResponse, YoutubeTranscript } from 'youtube-transcript';
 import * as ytdl from 'ytdl-core';
+import * as path from 'path';
+import * as fs from 'fs';
+import * as youtubedl from 'youtube-dl-exec';
+import { randomUUID } from 'crypto';
 
 export const getYoutubeTranscript = async (url: string) => {
   const transcript = await YoutubeTranscript.fetchTranscript(url);
   return transcript;
+};
+
+const parseWebVTT = (vttContent: string): TranscriptResponse[] => {
+  const lines = vttContent.split('\n');
+  const transcript: TranscriptResponse[] = [];
+  let currentText = '';
+  let currentStart = 0;
+  let currentEnd = 0;
+
+  const parseTimestamp = (timestamp: string): number => {
+    const [hours, minutes, seconds] = timestamp.split(':');
+    const [secs, millis] = seconds.split('.');
+    return (
+      parseInt(hours) * 3600 +
+      parseInt(minutes) * 60 +
+      parseInt(secs) +
+      parseInt(millis) / 1000
+    );
+  };
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+
+    if (line.includes('-->')) {
+      if (currentText) {
+        transcript.push({
+          offset: currentStart,
+          duration: currentEnd - currentStart,
+          text: currentText.trim(),
+        });
+        currentText = '';
+      }
+
+      const [start, end] = line.split(' --> ');
+      currentStart = parseTimestamp(start);
+      currentEnd = parseTimestamp(end);
+    } else if (
+      line &&
+      !line.startsWith('WEBVTT') &&
+      !line.startsWith('Kind:') &&
+      !line.startsWith('Language:')
+    ) {
+      currentText += line + ' ';
+    }
+  }
+
+  if (currentText) {
+    transcript.push({
+      offset: currentStart,
+      duration: currentEnd - currentStart,
+      text: currentText.trim(),
+    });
+  }
+
+  return transcript;
+};
+
+export const getYoutubeTranscriptV2 = async (
+  url: string,
+): Promise<TranscriptResponse[]> => {
+  try {
+    const randomId = randomUUID();
+    const outputPath = path.resolve(process.cwd(), `transcript_${randomId}`);
+
+    // Download subtitles/transcript with timestamps
+    await youtubedl.exec(url, {
+      skipDownload: true, // Don't download the video
+      writeAutoSub: true, // Get auto-generated subtitles
+      subLang: 'en', // Language code for subtitles
+      output: outputPath, // Output file path
+      writeSub: true, // Write subtitle file
+      subFormat: 'vtt', // Get VTT format (includes timestamps)
+    });
+
+    const transcriptVtt = fs.readFileSync(`${outputPath}.en.vtt`, 'utf8');
+    const transcript = parseWebVTT(transcriptVtt);
+    fs.unlinkSync(`${outputPath}.en.vtt`);
+
+    return transcript;
+  } catch (error) {
+    console.error('Error fetching transcript:', error.message);
+    return null;
+  }
 };
 
 export const convertTranscriptToText = (transcript: TranscriptResponse[]) => {

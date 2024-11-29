@@ -11,7 +11,7 @@ import {
   convertTranscriptToJson,
   convertTranscriptToText,
   getYoutubeInfo,
-  getYoutubeTranscript,
+  getYoutubeTranscriptV2,
 } from 'src/utils';
 
 import * as fs from 'fs';
@@ -127,7 +127,7 @@ export class YoutubeUrlsCommandHandler
     try {
       const { urls, userId } = command.input;
       const [transcript, info] = await Promise.all([
-        getYoutubeTranscript(urls[0]),
+        getYoutubeTranscriptV2(urls[0]),
         getYoutubeInfo(urls[0]),
       ]);
 
