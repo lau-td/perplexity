@@ -6,12 +6,14 @@ import {
   GenerateYoutubeSummaryCommandHandler,
   GetFlashCardCommandHandler,
   CreateFlashCardCommandHandler,
+  EnhanceUserQueryCommandHandler,
 } from './use-cases';
 
 const Handlers = [
   GenerateYoutubeSummaryCommandHandler,
   GetFlashCardCommandHandler,
   CreateFlashCardCommandHandler,
+  EnhanceUserQueryCommandHandler,
 ];
 
 @Module({

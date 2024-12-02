@@ -31,12 +31,15 @@ import {
 import { REPOSITORY_INJECTION_TOKEN } from 'src/common/enums';
 import { VectorStoreService } from '../vector-store/vector-store.service';
 import { Readable } from 'stream';
+import { EnhanceUserQueryCommand } from '../llm-task/use-cases';
+import { CommandBus } from '@nestjs/cqrs';
 
 @Injectable()
 export class DifyAiService {
   constructor(
     private readonly httpService: HttpService,
     private readonly vectorStoreService: VectorStoreService,
+    private readonly commandBus: CommandBus,
 
     @Inject(DifyAiConfig.KEY)
     private readonly config: ConfigType<typeof DifyAiConfig>,
@@ -120,6 +123,12 @@ export class DifyAiService {
     }
   }
 
+  async enhanceUserQuery(query: string): Promise<string> {
+    const command = new EnhanceUserQueryCommand({ query });
+    const result = await this.commandBus.execute(command);
+    return result.result;
+  }
+
   async chatMessageBlock(input: ChatInputDto): Promise<ChatResponseDto> {
     try {
       const document = await this.documentRepository.findOne({
@@ -147,15 +156,17 @@ export class DifyAiService {
         },
       });
 
+      const enhancedQuery = await this.enhanceUserQuery(input.query);
+
       const context = await this.getContext(
         document.userId,
         [document.id],
-        input.query,
+        enhancedQuery,
       );
 
       const payload = this.createChatPayload(
         'blocking',
-        input.query,
+        enhancedQuery,
         context,
         document.conversationId,
         document.parentMessageId,
@@ -232,15 +243,17 @@ export class DifyAiService {
         throw new NotFoundException('Youtube not found');
       }
 
+      const enhancedQuery = await this.enhanceUserQuery(input.query);
+
       const context = await this.getContext(
         document.userId,
         [document.id],
-        input.query,
+        enhancedQuery,
       );
 
       const payload = this.createChatPayload(
         'streaming',
-        input.query,
+        enhancedQuery,
         context +
           '---------------' +
           JSON.stringify({
