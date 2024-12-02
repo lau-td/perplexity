@@ -6,6 +6,8 @@ import { ConfigType } from '@nestjs/config';
 import { DifyAiConfig } from 'src/config';
 import { ConfigModule } from '@nestjs/config';
 import { VectorStoreModule } from '../vector-store/vector-store.module';
+import { LlmTaskModule } from '../llm-task/llm-task.module';
+import { CqrsModule } from '@nestjs/cqrs';
 
 @Module({
   imports: [
@@ -20,6 +22,8 @@ import { VectorStoreModule } from '../vector-store/vector-store.module';
       inject: [DifyAiConfig.KEY],
     }),
     VectorStoreModule,
+    LlmTaskModule,
+    CqrsModule,
   ],
   controllers: [DifyAiController],
   providers: [DifyAiService],
